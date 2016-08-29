@@ -1,4 +1,7 @@
-package com.github.tomsaleeba;
+package com.github.tomsaleeba.jr2c;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
@@ -6,10 +9,13 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceRequiredException;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.github.tomsaleeba.JenaRdfToCsvApplication.Theme;
+import com.github.tomsaleeba.jr2c.JenaRdfToCsvApplication.Theme;
 
 /**
  * Reads the RDF model and transforms it to CSV by trying to flatten it.
@@ -19,13 +25,27 @@ import com.github.tomsaleeba.JenaRdfToCsvApplication.Theme;
 @Component
 public class Transformer {
 
+	private static final Logger logger = LoggerFactory.getLogger(Transformer.class);
+	
 	@Autowired
 	private Model coreModel;
 	
+	@Value("${jr2c.namespace}")
+	private String namespace;
+	
+	@Value("${jr2c.property-name.theme}")
+	private String themePropertyName;
+	
+	@Value("${jr2c.entity-name.root}")
+	private String rootEntityName;
+	
+	private Set<Theme> inScopeThemes = new HashSet<>();
+	
 	public void toCsv() {
 		StringBuilder csvResult = new StringBuilder();
-		Resource root = coreModel.createResource(JenaRdfToCsvApplication.NAMESPACE + JenaRdfToCsvApplication.ROOT_ENTITY_LOCAL_NAME);
+		Resource root = coreModel.createResource(namespace + rootEntityName);
 		processEntity(root, csvResult);
+		logger.info("== The CSV result ==");
 		System.out.println(csvResult.toString());
 	}
 
@@ -48,15 +68,17 @@ public class Transformer {
 	}
 
 	private boolean isOutOfScope(Resource entity) {
-		Property themeProperty = coreModel.createProperty(JenaRdfToCsvApplication.NAMESPACE + JenaRdfToCsvApplication.THEME_PROPERTY_LOCAL_NAME);
+		Property themeProperty = coreModel.createProperty(namespace + themePropertyName);
 		Statement statement = entity.getProperty(themeProperty);
-		if (statement == null) {
+		boolean isNoTheme = statement == null;
+		if (isNoTheme) {
 			return false;
 		}
-		if (Theme.OUT_OF_SCOPE.toString().equals(statement.getString())) {
-			return true;
+		boolean isInScope = inScopeThemes.stream().anyMatch(e -> e.toString().equals(statement.getString()));
+		if (isInScope) {
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	private void addRow(StringBuilder csvResult, Resource subject, Property predicate, Resource object) {
@@ -82,5 +104,10 @@ public class Transformer {
 			return true;
 		}
 		return false;
+	}
+
+	public void setInScopeThemes(Set<Theme> inScopeThemes) {
+		this.inScopeThemes.clear();
+		this.inScopeThemes.addAll(inScopeThemes);
 	}
 }
