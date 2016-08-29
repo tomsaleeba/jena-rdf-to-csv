@@ -1,6 +1,8 @@
 package com.github.tomsaleeba.jr2c;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
@@ -8,6 +10,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceRequiredException;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,29 +45,63 @@ public class Transformer {
 	private Set<Theme> inScopeThemes = new HashSet<>();
 	
 	public void toCsv() {
-		StringBuilder csvResult = new StringBuilder();
+		CsvResultContext csvResultContext = new ImprovisedCsvResultContext();
 		Resource root = coreModel.createResource(namespace + rootEntityName);
-		processEntity(root, csvResult);
+		Row row = csvResultContext.newRow();
+		processEntity(root, csvResultContext, row);
 		logger.info("== The CSV result ==");
-		System.out.println(csvResult.toString());
+		String[] csvLines = csvResultContext.toCsv();
+		for (String curr : csvLines) {
+			System.out.println(curr);
+		}
 	}
 
-	private void processEntity(Resource entity, StringBuilder csvResult) {
+	private void processEntity(Resource entity, CsvResultContext csvResultContext, Row row) {
 		for (Statement curr : entity.listProperties().toList()) {
 			if (isLiteral(curr)) {
-				addRow(csvResult, curr.getSubject(), curr.getPredicate(), curr.getString()); // FIXME handle more than String
+				row.addOneToOneRelationship(curr.getSubject(), curr.getPredicate(), curr.getString()); // FIXME handle more than String
 				continue;
 			}
-			if (isType(curr)) {
+			if (isRdfTypeStatement(curr)) {
 				continue;
 			}
 			Resource otherEntity = curr.getResource();
 			if (isOutOfScope(otherEntity)) {
 				continue;
 			}
-			addRow(csvResult, curr.getSubject(), curr.getPredicate(), otherEntity);
-			processEntity(otherEntity, csvResult);
+			if (isBag(otherEntity)) {
+				// We're going to get repeated rows now
+				// TODO auto split into another table on one-to-many
+				processBag(curr, csvResultContext, row);
+				continue;
+			}
+			// Assuming one-to-one, fields go on this table
+			processEntity(otherEntity, csvResultContext, row);
 		}
+	}
+
+	private void processBag(Statement bagStatement, CsvResultContext csvResultContext, Row row) {
+		Resource bag = bagStatement.getResource();
+		List<String> values = new LinkedList<>();
+		for (StmtIterator it = bag.listProperties(); it.hasNext();) {
+			Statement curr = it.next();
+			if (isRdfTypeStatement(curr)) {
+				continue;
+			}
+			values.add(curr.getString()); // FIXME handle more than just String
+		}
+		row.addOneToManyRelationship(bagStatement.getSubject(), bagStatement.getPredicate(), values);
+	}
+
+	private boolean isBag(Resource resource) {
+		Statement typeStatement = resource.getProperty(RDF.type);
+		if (typeStatement == null) {
+			return false;
+		}
+		if (RDF.Bag.equals(typeStatement.getResource())) {
+			return true;
+		}
+		return false;
 	}
 
 	private boolean isOutOfScope(Resource entity) {
@@ -81,15 +118,6 @@ public class Transformer {
 		return true;
 	}
 
-	private void addRow(StringBuilder csvResult, Resource subject, Property predicate, Resource object) {
-		addRow(csvResult, subject, predicate, object.getURI());
-	}
-
-	private void addRow(StringBuilder csvResult, Resource subject, Property predicate, String literal) {
-		String str = String.format("\"%s\",\"%s\",\"%s\"\n", subject.getURI(), predicate.getURI(), literal);
-		csvResult.append(str);
-	}
-
 	private boolean isLiteral(Statement s) {
 		try {
 			s.getResource();
@@ -99,7 +127,7 @@ public class Transformer {
 		}
 	}
 	
-	private boolean isType(Statement curr) {
+	private boolean isRdfTypeStatement(Statement curr) {
 		if (RDF.type.equals(curr.getPredicate())) {
 			return true;
 		}

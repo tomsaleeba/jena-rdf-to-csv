@@ -31,7 +31,7 @@ public class JenaRdfToCsvApplication {
 		Transformer transformer = context.getBean(Transformer.class);
 		Set<Theme> inScopeThemes = EnumSet.of(
 				Theme.THEME1
-//				,Theme.THEME2 // Uncomment me to include this theme
+				,Theme.THEME2 // Uncomment me to include this theme
 		);
 		transformer.setInScopeThemes(inScopeThemes);
 		transformer.toCsv();

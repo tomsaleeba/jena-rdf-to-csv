@@ -1,5 +1,6 @@
 package com.github.tomsaleeba.jr2c;
 
+import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -34,9 +35,13 @@ public class ModelPopulater {
 	private String rootEntityName;
 	
 	public void populate() {
+		Resource species = bag(
+			"species one", "species two");
+		
 		Resource visitSubject = resource("Visit", "Visit-1",
 			literalStatement("name", "First Visit"),
-			themeStatement(Theme.THEME2));
+			themeStatement(Theme.THEME2),
+			resourceStatement("observedSpecies", species));
 		
 		Resource siteSubject = resource("Site", "Site-1",
 			literalStatement("name", "Northern Site"),
@@ -50,6 +55,14 @@ public class ModelPopulater {
 			resourceStatement("site", siteSubject));
 		logger.info("== The model ==");
 		coreModel.write(System.out, "TURTLE");
+	}
+
+	private Resource bag(String...values) {
+		Bag result = coreModel.createBag();
+		for (String curr : values) {
+			result.add(curr);
+		}
+		return result;
 	}
 
 	private ResourceStatementPlaceholder resourceStatement(String propertyLocalName, Resource otherResource) {
