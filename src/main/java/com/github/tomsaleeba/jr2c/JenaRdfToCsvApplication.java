@@ -1,8 +1,5 @@
 package com.github.tomsaleeba.jr2c;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,17 +23,10 @@ public class JenaRdfToCsvApplication {
 	
 	public static void main(String[] args) {
 		ConfigurableApplicationContext context = SpringApplication.run(JenaRdfToCsvApplication.class, args);
-		ModelPopulater populater = context.getBean(ModelPopulater.class);
-		populater.populate();
-		Transformer transformer = context.getBean(Transformer.class);
-		Set<Theme> inScopeThemes = EnumSet.of(
-				Theme.THEME1
-				,Theme.THEME2 // Uncomment me to include this theme
-		);
-		transformer.setInScopeThemes(inScopeThemes);
-		transformer.toCsv();
+		Runner runner = context.getBean(Runner.class);
+		runner.run();
 	}
-	
+
 	@Bean
 	public Model coreModel() {
 		Model result = ModelFactory.createDefaultModel();

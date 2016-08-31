@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import com.github.tomsaleeba.jr2c.JenaRdfToCsvApplication.Theme;
 
 /**
- * Populates the RDF model with data.
+ * Populates the RDF model with example data.
  * 
  * @author Tom Saleeba
  */
@@ -53,8 +53,9 @@ public class ModelPopulater {
 			literalStatement("name", "Big Project"),
 			literalStatement("landing-page", "http://example.com/big-project/index.html"),
 			resourceStatement("site", siteSubject));
-		logger.info("== The model ==");
+		logger.info("== Start example model data ==");
 		coreModel.write(System.out, "TURTLE");
+		logger.info("== End example model data ==");
 	}
 
 	private Resource bag(String...values) {

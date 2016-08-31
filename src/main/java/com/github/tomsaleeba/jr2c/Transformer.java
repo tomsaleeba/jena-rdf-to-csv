@@ -39,21 +39,23 @@ public class Transformer {
 	@Value("${jr2c.property-name.theme}")
 	private String themePropertyName;
 	
-	@Value("${jr2c.entity-name.root}")
-	private String rootEntityName;
+	@Value("${root-entity}")
+	private String rootEntityUri;
 	
 	private Set<Theme> inScopeThemes = new HashSet<>();
 	
 	public void toCsv() {
 		CsvResultContext csvResultContext = new ImprovisedCsvResultContext();
-		Resource root = coreModel.createResource(namespace + rootEntityName);
+		logger.info("Using '{}' as the root entity URI", rootEntityUri);
+		Resource root = coreModel.createResource(rootEntityUri);
 		Row row = csvResultContext.newRow();
 		processEntity(root, csvResultContext, row);
-		logger.info("== The CSV result ==");
+		logger.info("== Start CSV result ==");
 		String[] csvLines = csvResultContext.toCsv();
 		for (String curr : csvLines) {
 			System.out.println(curr);
 		}
+		logger.info("== End CSV result ==");
 	}
 
 	private void processEntity(Resource entity, CsvResultContext csvResultContext, Row row) {
@@ -86,6 +88,9 @@ public class Transformer {
 		for (StmtIterator it = bag.listProperties(); it.hasNext();) {
 			Statement curr = it.next();
 			if (isRdfTypeStatement(curr)) {
+				continue;
+			}
+			if (!isLiteral(curr)) {
 				continue;
 			}
 			values.add(curr.getString()); // FIXME handle more than just String
