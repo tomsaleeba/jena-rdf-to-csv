@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.EnumSet;
-import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
@@ -13,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import com.github.tomsaleeba.jr2c.JenaRdfToCsvApplication.Theme;
 
 @Component
 public class Runner {
@@ -36,12 +32,6 @@ public class Runner {
 	
 	public void run() {
 		populateModel();
-		Set<Theme> inScopeThemes = EnumSet.of(
-				Theme.THEME1
-//				,Theme.THEME2 // Uncomment me to include this theme
-		);
-		logger.info("Including the following themes: {}", inScopeThemes);
-		transformer.setInScopeThemes(inScopeThemes);
 		transformer.toCsv();
 	}
 

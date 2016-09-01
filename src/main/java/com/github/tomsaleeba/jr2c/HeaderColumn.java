@@ -1,6 +1,6 @@
 package com.github.tomsaleeba.jr2c;
 
-class HeaderColumn {
+public class HeaderColumn {
 	private final String name;
 
 	public HeaderColumn(String name) {

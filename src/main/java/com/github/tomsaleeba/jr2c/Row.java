@@ -13,7 +13,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
 
-class Row {
+public class Row {
 	private static final String NO_VALUE_FOR_THIS_COLUMN = "";
 	private static final String MAGIC_PLACEHOLDER = "%OneToManyVal%";
 	private final Map<HeaderColumn, String> oneToOneValues = new HashMap<>();
