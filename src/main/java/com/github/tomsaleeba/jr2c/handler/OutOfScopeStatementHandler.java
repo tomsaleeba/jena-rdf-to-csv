@@ -1,14 +1,13 @@
 package com.github.tomsaleeba.jr2c.handler;
 
-import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.github.tomsaleeba.jr2c.JenaRdfToCsvApplication.Theme;
 import com.github.tomsaleeba.jr2c.Row;
@@ -18,27 +17,21 @@ import com.github.tomsaleeba.jr2c.Row;
  * the literal handler(s) in the chain. It's not possible to have an out of scope
  * literal so this makes sense.
  */
+@Component
 public class OutOfScopeStatementHandler implements StatementHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(OutOfScopeStatementHandler.class);
-	private final String namespace;
-	private final String themePropertyName;
-	private Set<Theme> inScopeThemes = new HashSet<>();
+	@Autowired
+	private Set<Theme> inScopeThemes;
 	
-	public OutOfScopeStatementHandler(String namespace, String themePropertyName) {
-		this.namespace = namespace;
-		this.themePropertyName = themePropertyName;
-		// FIXME turn these Themes into config
-		Set<Theme> inScopeThemes = EnumSet.of(
-				Theme.THEME1
-//				,Theme.THEME2 // Uncomment me to include this theme
-		);
-		logger.info("Including the following themes: {}", inScopeThemes);
-	}
-
+	@Value("${jr2c.namespace}")
+	private String namespace;
+	
+	@Value("${jr2c.property-name.theme}")
+	private String themePropertyLocalName;
+	
 	@Override
 	public boolean canHandle(Statement statement) {
-		Property themeProperty = statement.getModel().createProperty(namespace + themePropertyName);
+		Property themeProperty = statement.getModel().createProperty(namespace + themePropertyLocalName);
 		Resource otherEntity = statement.getResource();
 		Statement themeStatement = otherEntity.getProperty(themeProperty);
 		boolean isNoTheme = themeStatement == null;

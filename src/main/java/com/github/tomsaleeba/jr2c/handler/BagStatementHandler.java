@@ -7,18 +7,19 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.github.tomsaleeba.jr2c.Row;
 
+@Component
 public class BagStatementHandler implements StatementHandler {
 
-	private final LiteralStatementHandler literalHandler;
-	private final RdfTypeStatementHandler rdfTypeHandler;
+	@Autowired
+	private LiteralStatementHandler literalHandler;
 	
-	public BagStatementHandler(LiteralStatementHandler literalHandler, RdfTypeStatementHandler rdfTypeHandler) {
-		this.literalHandler = literalHandler;
-		this.rdfTypeHandler = rdfTypeHandler;
-	}
+	@Autowired
+	private RdfTypeStatementHandler rdfTypeHandler;
 
 	@Override
 	public boolean canHandle(Statement statement) {

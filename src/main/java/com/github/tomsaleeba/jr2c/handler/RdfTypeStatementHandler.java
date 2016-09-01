@@ -2,9 +2,11 @@ package com.github.tomsaleeba.jr2c.handler;
 
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.RDF;
+import org.springframework.stereotype.Component;
 
 import com.github.tomsaleeba.jr2c.Row;
 
+@Component
 public class RdfTypeStatementHandler implements StatementHandler {
 
 	@Override

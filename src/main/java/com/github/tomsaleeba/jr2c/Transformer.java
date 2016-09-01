@@ -8,11 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.github.tomsaleeba.jr2c.handler.BagStatementHandler;
-import com.github.tomsaleeba.jr2c.handler.EntityStatementHandler;
-import com.github.tomsaleeba.jr2c.handler.LiteralStatementHandler;
-import com.github.tomsaleeba.jr2c.handler.OutOfScopeStatementHandler;
-import com.github.tomsaleeba.jr2c.handler.RdfTypeStatementHandler;
 import com.github.tomsaleeba.jr2c.handler.StatementHandlerChain;
 
 /**
@@ -23,19 +18,16 @@ import com.github.tomsaleeba.jr2c.handler.StatementHandlerChain;
 @Component
 public class Transformer {
 
-	static final Logger logger = LoggerFactory.getLogger(Transformer.class);
+	private static final Logger logger = LoggerFactory.getLogger(Transformer.class);
 	
-	private final MagicFactory factory = newFactory();
-	private StatementHandlerChain chain = factory.getChainInstance();
+	@Autowired
+	private StatementHandlerChain chain;
 	
 	@Autowired
 	private Model coreModel;
 	
 	@Value("${jr2c.namespace}")
 	private String namespace;
-	
-	@Value("${jr2c.property-name.theme}")
-	private String themePropertyLocalName;
 	
 	@Value("${root-entity}")
 	private String rootEntityUri;
@@ -52,30 +44,5 @@ public class Transformer {
 			System.out.println(curr);
 		}
 		logger.info("== End CSV result ==");
-	}
-
-	class MagicFactory {
-
-		private StatementHandlerChain instance;
-
-		public StatementHandlerChain getChainInstance() {
-			if (instance != null) {
-				return instance;
-			}
-			instance = new StatementHandlerChain();
-			RdfTypeStatementHandler rdfTypeStatementHandler = new RdfTypeStatementHandler();
-			instance.addLink(rdfTypeStatementHandler);
-			LiteralStatementHandler literalStatementHandler = new LiteralStatementHandler();
-			instance.addLink(literalStatementHandler);
-			instance.addLink(new BagStatementHandler(literalStatementHandler, rdfTypeStatementHandler));
-			instance.addLink(new OutOfScopeStatementHandler(namespace, themePropertyLocalName));
-			instance.setEntityHandler(new EntityStatementHandler());
-			instance.postConstruct();
-			return instance;
-		}
-	}
-
-	private MagicFactory newFactory() {
-		return new MagicFactory();
 	}
 }

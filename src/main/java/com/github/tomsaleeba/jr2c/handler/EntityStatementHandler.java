@@ -3,9 +3,11 @@ package com.github.tomsaleeba.jr2c.handler;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceRequiredException;
 import org.apache.jena.rdf.model.Statement;
+import org.springframework.stereotype.Component;
 
 import com.github.tomsaleeba.jr2c.Row;
 
+@Component
 public class EntityStatementHandler implements StatementHandler {
 	
 	private StatementHandlerChain chain;
